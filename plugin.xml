@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            name="AnimatedWizardSample"
+            id="AnimatedWizardSample.command">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.handlers">
+      <handler
+            commandId="AnimatedWizardSample.command"
+            class="com.liferay.ide.animatedwizardsample.AnimatedWizardSampleHandler">
+      </handler>
+   </extension>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            locationURI="menu:org.eclipse.ui.main.menu?after=additions">
+         <menu
+               label="AnimatedWizardSample"
+               mnemonic="M"
+               id="AnimatedWizardSample.menu">
+            <command
+                  commandId="AnimatedWizardSample.command"
+                  mnemonic="S"
+                  id="AnimatedWizardSample.id">
+            </command>
+         </menu>
+      </menuContribution>
+   </extension>
+
+</plugin>
