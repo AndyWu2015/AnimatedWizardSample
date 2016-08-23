@@ -580,6 +580,8 @@ public class GearControl extends Canvas
         // gear.redraw();
 
         Button button = new Button( shell, SWT.PUSH );
+        
+        button.setText( "animate" );
 
         button.addSelectionListener( new SelectionListener()
         {
