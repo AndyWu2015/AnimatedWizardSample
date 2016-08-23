@@ -6,7 +6,6 @@ import org.osgi.framework.BundleContext;
 
 public class AnimatedWizardSample extends Plugin
 {
-
     private static AnimatedWizardSample plugin;
 
     public static AnimatedWizardSample getDefault()
@@ -17,7 +16,6 @@ public class AnimatedWizardSample extends Plugin
     @Override
     public void start( BundleContext context ) throws Exception
     {
-
         super.start( context );
 
         plugin = this;
@@ -28,7 +26,5 @@ public class AnimatedWizardSample extends Plugin
     {
         plugin = null;
         super.stop( context );
-
     }
-
 }

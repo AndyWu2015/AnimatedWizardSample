@@ -152,6 +152,7 @@ public class GearShell extends AnimatedShell<Map<URI, Pair<String, String>>>impl
     setSize(width, height);
 
     Composite parent = getParent();
+
     if (parent != null)
     {
       Rectangle bounds = parent.getBounds();

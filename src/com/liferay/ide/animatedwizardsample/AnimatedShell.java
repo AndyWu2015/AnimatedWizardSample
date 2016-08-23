@@ -18,6 +18,7 @@ import org.eclipse.swt.widgets.Shell;
 /**
  * @author Eike Stepper
  */
+//a class to contain the canvas and has a meta type for result
 public class AnimatedShell<T> extends Shell
 {
   private AnimatedCanvas canvas;
@@ -79,6 +80,7 @@ public class AnimatedShell<T> extends Shell
     open();
 
     Display display = getDisplay();
+
     while (!isDisposed())
     {
       if (!display.readAndDispatch())
@@ -99,6 +101,7 @@ public class AnimatedShell<T> extends Shell
   protected void init()
   {
     setLayout(new FillLayout());
+
     canvas = new AnimatedCanvas(this, SWT.NONE);
   }
 }

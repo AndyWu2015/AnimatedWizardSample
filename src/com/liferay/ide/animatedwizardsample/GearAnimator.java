@@ -25,8 +25,6 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Display;
 
-import com.liferay.ide.animatedwizardsample.AnimatedCanvas.Animator;
-
 /**
  * @author Eike Stepper
  */
@@ -599,6 +597,7 @@ public class GearAnimator extends Animator
   protected boolean shouldShowOverlay()
   {
     Page page = getSelectedPage();
+
     if (page instanceof ImagePage)
     {
       ImagePage questionPage = (ImagePage)page;
@@ -623,6 +622,7 @@ public class GearAnimator extends Animator
   protected boolean advance()
   {
     boolean needsRedraw = false;
+
     if (overflow)
     {
       overflow = false;
@@ -663,6 +663,7 @@ public class GearAnimator extends Animator
   @Override
   protected void paint(GC gc, Image buffer)
   {
+     //System.out.println("paint");
     gc.setFont(getBaseFont());
     gc.setLineWidth(3);
     gc.setAntialias(SWT.ON);
@@ -707,10 +708,12 @@ public class GearAnimator extends Animator
     }
     else
     {
+      //slide effect
       double progress = 2 * speed / ANGLE;
       int slide = Math.min((int)(PAGE_WIDTH * progress * progress), PAGE_WIDTH);
 
       gc.setAlpha(255 - alpha);
+
       if (selection > oldSelection)
       {
         gc.drawImage(oldPageBuffer, slide, 0, PAGE_WIDTH - slide, PAGE_HEIGHT, BORDER, pageY, PAGE_WIDTH - slide, PAGE_HEIGHT);
@@ -807,6 +810,9 @@ public class GearAnimator extends Animator
     gc.setBackground(hovered ? GRAY : gearBackground[selected]);
 
     Display display = getDisplay();
+
+    //System.out.println(angleOffset);
+
     Path path = drawGear(gc, display, x, y, outerR, innerR, angleOffset);
 
     if (gearPaths[i] != null)

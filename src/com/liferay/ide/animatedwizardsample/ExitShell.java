@@ -19,8 +19,6 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Display;
 
-import com.liferay.ide.animatedwizardsample.AnimatedCanvas.Animator;
-
 /**
  * @author Eike Stepper
  */
@@ -67,6 +65,7 @@ public class ExitShell extends AnimatedShell<Boolean>
   /**
    * @author Eike Stepper
    */
+  //a good example to use animator
   public class ExitAnimator extends Animator
   {
     private boolean oldShowOverlay;
@@ -189,6 +188,7 @@ public class ExitShell extends AnimatedShell<Boolean>
       gc.drawImage(image, x, y);
 
       oldShowOverlay = shouldShowOverlay();
+      //show the override image according to time
       if (oldShowOverlay)
       {
         gc.drawImage(image_ovr, x + 133, y + 105);
