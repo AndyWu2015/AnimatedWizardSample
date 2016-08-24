@@ -1,14 +1,17 @@
 
 package com.liferay.ide.animatedwizardsample;
 
+import java.io.File;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
-import org.eclipse.swt.events.KeyAdapter;
-import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseMoveListener;
@@ -26,7 +29,6 @@ import org.eclipse.swt.graphics.Path;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.graphics.Resource;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -62,7 +64,6 @@ public class GearControl extends Canvas
 
         if( needsRedraw )
         {
-            //System.out.println("redraw");
             redraw();
         }
         else
@@ -81,6 +82,7 @@ public class GearControl extends Canvas
     private int height;
     
     private Font baseFont;
+
     private final List<Resource> resources = new ArrayList<Resource>();
     
     public static final String RECORDER_PREFERENCE_KEY = "RECORDER_PREFERENCE_KEY";
@@ -93,7 +95,19 @@ public class GearControl extends Canvas
 
     public static final int BORDER = 30;
 
-    public static final int GEARS = 7;
+    public int gearsNumber = 7;
+
+    
+    public int getGearsNumber()
+    {
+        return gearsNumber;
+    }
+
+    
+    public void setGearsNumber( int gearsNumber )
+    {
+        this.gearsNumber = gearsNumber;
+    }
 
     private static final int TEETH = 8;
 
@@ -109,8 +123,15 @@ public class GearControl extends Canvas
 
     private static final int CHOICES = NEXT - 1;
 
-    private static final String[] TITLES = { "Welcome to Eclipse", "Refresh Resources Automatically?", "Show Line Numbers in Editors?",
-        "Check Spelling in Text Editors?", "Execute Jobs in Background?", "Encode Text Files with UTF-8?", "Enable Preference Recorder?" };
+    private static final String[] TITLES = {
+                "Welcome to Code Upgrade Tool", 
+                "Import projects", 
+                "Update Descriptors",
+                "Find Breaking Changes", 
+                "Build Service", 
+                "Convert Custom Jsp", 
+                "Layout","Compile" 
+            };
 
     static final int BIG_FONT_PX = 48;
 
@@ -153,14 +174,16 @@ public class GearControl extends Canvas
     private final Image[] nextImages = new Image[2];
 
     private final Image[] yesImages = new Image[5];
+    
+    private Image yesBadgeImage ;
 
     private final Image[] noImages = new Image[5];
 
-    private final Page[] pages = new Page[GEARS + 1];
+    private final Page[] pages = new Page[gearsNumber];
 
-    private final Point[] tooltipPoints = new Point[pages.length];
+    private final Point[] tooltipPoints = new Point[gearsNumber];
 
-    private final Path[] gearPaths = new Path[GEARS + 1];
+    private final Path[] gearPaths = new Path[gearsNumber];
 
     private final Color[] gearBackground = new Color[2];
 
@@ -305,7 +328,6 @@ public class GearControl extends Canvas
                 bufferGC.setAdvanced( true );
                 bufferGC.setBackground( canvasGc.getBackground() );
                 bufferGC.fillRectangle( buffer.getBounds() );
-                bufferGC.setTextAntialias( SWT.ON );
 
                 paint( bufferGC );
                 
@@ -313,12 +335,6 @@ public class GearControl extends Canvas
 
                 bufferGC.dispose();
                 buffer.dispose();
-                
-                if( !isFocusControl() )
-                {
-                    //when lose focus , make the alpha to 200
-                    cover( e.gc, 0 );
-                }
                 
                 scheduleRun();
             }
@@ -373,6 +389,7 @@ public class GearControl extends Canvas
         for (int i = 0; i < gearPaths.length; i++)
         {
           Path path = gearPaths[i];
+
           if (path != null && path.contains(x, y, gc, false))
           {
             if (i != getSelection())
@@ -416,14 +433,6 @@ public class GearControl extends Canvas
       return false;
     }
     
-    public void cover( GC gc, int alpha )
-    {
-        gc.setBackground( getDisplay().getSystemColor( SWT.COLOR_WHITE ) );
-        gc.setAlpha( alpha );
-        gc.fillRectangle( getBounds() );
-        gc.setAlpha( 255 );
-    }
-    
     public void restart()
     {
       angle = 0;
@@ -454,10 +463,10 @@ public class GearControl extends Canvas
         hoverFont = createFont(BIG_FONT_PX + 6, PAGE_WIDTH, TITLES);
         normalFont = createFont(NORMAL_FONT_PX, PAGE_WIDTH, TITLES);
         numberFont = createFont(24);
-        tooltipFont = createFont(16);
+        tooltipFont = createFont(24);
         
         radius = 32;
-        setSize((int)(GEARS * 2 * radius), (int)(2 * radius));
+        setSize((int)(gearsNumber * 2 * radius), (int)(2 * radius));
         pageY = getSize().y + 2 * BORDER;
 
         // Not selected.
@@ -479,6 +488,32 @@ public class GearControl extends Canvas
         oldPageBuffer = new Image(display, PAGE_WIDTH, PAGE_HEIGHT);
         oldPageGC = new GC(oldPageBuffer);
         oldPageGC.setAdvanced(true);
+        
+        yesBadgeImage = loadImage("yes_badge.png");
+    }
+    
+    protected final Image loadImage( String name )
+    {
+        URL url = null;
+        
+        File imageFile = new File("images/"+name);
+
+        try
+        {
+            //TODO need to be changed to get image from bundle
+            url  = imageFile.toURI().toURL();
+        }
+        catch( Exception e )
+        {
+        }
+
+        ImageDescriptor imagedesc = ImageDescriptor.createFromURL( url );
+
+        Image image = imagedesc.createImage();
+
+        resources.add( image );
+
+        return image;
     }
     
     public final Font getBaseFont()
@@ -537,39 +572,35 @@ public class GearControl extends Canvas
 
     private void paint( GC gc )
     {
-        //System.out.println(System.currentTimeMillis()/1000);
+        // System.out.println(System.currentTimeMillis()/1000);
 
-        gc.setFont(getBaseFont());
-        gc.setLineWidth(3);
-        gc.setAntialias(SWT.ON);
-        
-        int alpha = Math.min((int)(255 * speed / ANGLE), 255);
+        gc.setFont( getBaseFont() );
+        gc.setLineWidth( 3 );
+        gc.setAntialias( SWT.ON );
 
-        for (int i = 0; i < GEARS + 1; i++)
+        int alpha = Math.min( (int) ( 255 * speed / ANGLE ), 255 );
+
+        for( int i = 0; i < gearsNumber; i++ )
         {
-          if (i != selection && (i < GEARS || summaryShown))
-          {
-            tooltipPoints[i] = paintGear(gc, i, alpha);
-          }
+            tooltipPoints[i] = paintGear( gc, i, alpha );
         }
-        
-        // selected gear
-        tooltipPoints[selection] = paintGear(gc, selection, alpha);
-        
+
         // show gear tooltip
-        if (hover >= 0 && hover < tooltipPoints.length)
+        if( hover >= 0 && hover < tooltipPoints.length )
         {
-          Point point = tooltipPoints[hover];
-          String title = TITLES[hover];
+            Point point = tooltipPoints[hover];
 
-          gc.setFont(tooltipFont);
-          gc.setForeground(DARK_GRAY);
-          gc.setBackground(tooltipColor);
-          Rectangle rectangle = drawText(gc, point.x, point.y + 14, title, 2);
+            String title = TITLES[hover];
 
-          gc.setForeground(GRAY);
-          gc.setLineWidth(1);
-          gc.drawRectangle(rectangle);
+            gc.setFont( tooltipFont );
+            gc.setForeground( DARK_GRAY );
+            gc.setBackground( tooltipColor );
+            
+            Rectangle rectangle = drawText( gc, point.x, point.y + 14, title, 2 );
+
+            gc.setForeground( GRAY );
+            gc.setLineWidth( 1 );
+            gc.drawRectangle( rectangle );
         }
 
         oldHover = hover;
@@ -606,6 +637,7 @@ public class GearControl extends Canvas
       }
 
       boolean hovered = false;
+
       if (i == hover)
       {
         factor += .1;
@@ -640,21 +672,15 @@ public class GearControl extends Canvas
       gc.setBackground(WHITE);
       gc.fillOval(ovalX, ovalY, ovalR, ovalR);
       gc.drawOval(ovalX, ovalY, ovalR, ovalR);
+      
+      if (i < gearsNumber )
+      {
+        String number = Integer.toString( i + 1 );
 
-      if (i == 0)
-      {
-        //Animator.drawImage(gc, welcomeImages[selected], (int)x, (int)y);
-      }
-      else if (i < GEARS)
-      {
-        String number = Integer.toString(i);
         gc.setForeground(selected == 1 ? gearForeground[1] : GRAY);
         gc.setFont(numberFont);
-        Animator.drawText(gc, x, y - 1, number);
-      }
-      else
-      {
-        //Animator.drawImage(gc, summaryImages[selected], (int)x, (int)y);
+
+        drawText(gc, x, y - 1, number);
       }
 
       return paintBadge(gc, x, y, outerR, i, alpha);
@@ -662,11 +688,11 @@ public class GearControl extends Canvas
 
     private Point paintBadge(GC gc, double x, double y, double outerR, int i, int alpha)
     {
-      if (selection >= GEARS)
+      if (selection >= gearsNumber)
       {
         gc.setAlpha(255 - alpha);
       }
-      else if (oldSelection >= GEARS)
+      else if (oldSelection >= gearsNumber)
       {
         gc.setAlpha(alpha);
       }
@@ -680,7 +706,9 @@ public class GearControl extends Canvas
         gc.drawImage(image, (int)(x - image.getBounds().width / 2), (int)(y - outerR - 12));
       }*/
 
+      gc.drawImage(yesBadgeImage, (int)(x - yesBadgeImage.getBounds().width / 2), (int)(y - outerR - 12));
       gc.setAlpha(255);
+
       return new Point((int)x, (int)(y + outerR));
     }
     
@@ -847,31 +875,100 @@ public class GearControl extends Canvas
         GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
         gridData.grabExcessHorizontalSpace = true;
         gridData.widthHint = 400;
-        gridData.heightHint = 200;
+        gridData.heightHint = 120;
         
         gear.setLayoutData( gridData );
+        
+        gear.setGearsNumber( 7 );
+        
+        final StackLayout stackLayout = new StackLayout();
+        
+        final Composite container = new Composite( shell, SWT.BORDER );
+        
+        container.setLayout( stackLayout );
+        
+        
+        GridData containerData = new GridData(GridData.FILL_HORIZONTAL);
+        containerData.grabExcessHorizontalSpace = true;
+        containerData.widthHint = 400;
+        containerData.heightHint = 300;
+        container.setLayoutData( containerData );
+        
+        Button backButton = new Button(shell, SWT.PUSH);
+        backButton.setText( "back" );
+        
+        Button nextButton = new Button(shell, SWT.PUSH);
+        nextButton.setText( "next" );
+
+        Composite composite1 = new Composite( container, SWT.NONE );
+        composite1.setBackground(Display.getDefault().getSystemColor( SWT.COLOR_WHITE));
+        
+        Composite composite2 = new Composite( container, SWT.NONE );
+        composite2.setBackground(Display.getDefault().getSystemColor( SWT.COLOR_BLUE));
+        
+        Composite composite3 = new Composite( container, SWT.NONE );
+        composite3.setBackground(Display.getDefault().getSystemColor( SWT.COLOR_GREEN));
+        
+        final Composite[] composites = new Composite[3];
+        composites[0] = composite1;
+        composites[1] = composite2;
+        composites[2] = composite3;
+        
+        nextButton.addSelectionListener( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected( SelectionEvent e )
+            {
+                int i = gear.getSelection();
+                stackLayout.topControl = composites[i+1];
+                
+                gear.setSelection( i+ 1 );
+                container.layout();
+            }
+            
+            @Override
+            public void widgetDefaultSelected( SelectionEvent e )
+            {
+            }
+        } );
+        
+        backButton.addSelectionListener( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected( SelectionEvent e )
+            {
+                int i = gear.getSelection();
+                stackLayout.topControl = composites[i-1];
+                gear.setSelection( i-1 );
+                container.layout();
+            }
+            
+            @Override
+            public void widgetDefaultSelected( SelectionEvent e )
+            {
+            }
+        } );
+        
+        stackLayout.topControl = composite1;
+        
+        container.layout();
 
         Button button = new Button(shell, SWT.PUSH);
         
-        button.setText("animate gears");
+        button.setText("change gears number");
         
-        GridData gridTextData = new GridData(GridData.FILL_HORIZONTAL);
-        gridData.grabExcessHorizontalSpace = true;
-        gridTextData.minimumHeight = 30;
-        gridTextData.minimumWidth = 30;
         
         final Text text = new Text(shell , SWT.NONE);
         
-        text.setText( "0" );
-        
-        text.setData( gridTextData );
+        text.setText( "1" );
         
         button.addSelectionListener( new SelectionListener()
         {
             @Override
             public void widgetSelected( SelectionEvent e )
             {
-                gear.setSelection(Integer.parseInt( text.getText() ));
+                gear.setGearsNumber( Integer.parseInt( text.getText() ) );
+                gear.setSelection( 0 );
             }
 
             @Override
